@@ -6,12 +6,14 @@
 #include <sys/epoll.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "status.h"
 
-#define MAX_EVENTS  10
 #define IP_ADDRESS  INADDR_ANY
 #define PORT        4000
+#define BACKLOG     5
+#define MAX_EVENTS  10
 #define PACK_BEGIN  "_BEGIN"
 #define PACK_END    "_END"
 
@@ -42,11 +44,11 @@ int init_socket(struct server_bound *s, uint32_t ip_address, int port)
         return -1;
     }
 
-    s->addrlen = sizeof(server->client_info);
+    s->addrlen = sizeof(s->client_info);
 
     s->server_info.sin_family = AF_INET;
     s->server_info.sin_addr.s_addr = ip_address;
-    s->server_info.sin_port = port;
+    s->server_info.sin_port = htons(port);
 
     return 0;
 }
@@ -71,7 +73,7 @@ int listen_socket(struct server_bound *s, int backlog)
 
     s->ev.events = EPOLLIN;
     s->ev.data.fd = s->sock_fd;
-    if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, sock_fd, &s->ev) == -1)
+    if(epoll_ctl(s->epoll_fd, EPOLL_CTL_ADD, s->sock_fd, &s->ev) == -1)
     {
         perror("epoll_ctl: sock_fd");
         return -1;
@@ -121,23 +123,23 @@ int accept_client(struct server_bound *s)
 int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_size)
 {
 
-    if(s->all_events[s->n].events & EPOLLIN)
+    if(s->all_events[s->nfd].events & EPOLLIN)
     {
-        int count = recv(s->all_events[n].data.fd, input_buffer, buffer_size-1, MSG_DONTWAIT);
+        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size-1, MSG_DONTWAIT);
         if(count == -1)
         {
             if(errno != EAGAIN)
             {
                 perror ("read");
-                close(s->all_events[n].data.fd);
-                epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[n].data.fd, &s->ev);
+                close(s->all_events[s->nfd].data.fd);
+                epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
                 return -1;
             }
         }
         if(count == 0)
         {
-            close(s->all_events[n].data.fd);
-            epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[n].data.fd, &s->ev);
+            close(s->all_events[s->nfd].data.fd);
+            epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
         }
         input_buffer[count] = '\0';
         printf("%s", input_buffer);
@@ -153,16 +155,16 @@ int socket_epoll(int ip, int port, int backlog, int max_events)
     char input_buffer[256];
     struct server_bound *server;
 
-    server = (server_bound *)calloc(1, sizeof(server_bound));
+    server = (struct server_bound *)calloc(1, sizeof(struct server_bound));
 
     init_socket(server, ip, port);
     listen_socket(server, backlog);
     while(true)
     {
         wait_epoll(server, max_events);
-        for(server->n = 0; server->n < server->nfds; server->n++)
+        for(server->nfd = 0; server->nfd < server->nfds; server->nfd++)
         {
-            if(server->all_events[server->n].data.fd == server->sock_fd)
+            if(server->all_events[server->nfd].data.fd == server->sock_fd)
                 accept_client(server);
             else
                 provide_server(server, input_buffer, sizeof(input_buffer));
@@ -175,18 +177,7 @@ int socket_epoll(int ip, int port, int backlog, int max_events)
 
 int main(int argc, char *argv[])
 {
-    status_t sock_mach = {NULL, NULL, true, 0};
-
-    {
-        struct server_bound server1 = {0};
-        sock_mach.p = &server1;
-        STATE_MACHINE(sock_mach, init_socket);
-        close(server1._sockfd);
-    }
-
-
-    int socket_epoll(INADDR_ANY, htons(PORT), 5, MAX_EVENTS);
-
+    socket_epoll(INADDR_ANY, PORT, BACKLOG, MAX_EVENTS);
 
     return 0;
 }
