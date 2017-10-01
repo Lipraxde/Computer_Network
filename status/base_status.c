@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "status.h"
+#include "base_status.h"
 
 void A(status_t *s);
 void B(status_t *s);

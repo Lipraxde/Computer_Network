@@ -9,20 +9,13 @@
 
 #include "status.h"
 
-#define BUFFER_SIZE 256
-#define MAX_EVENTS 10
+#define MAX_EVENTS  10
+#define IP_ADDRESS  INADDR_ANY
+#define PORT        4000
+#define PACK_BEGIN  "_BEGIN"
+#define PACK_END    "_END"
 
 const char connect_msg[] = {"Connect to server.\n"};
-
-struct calculator
-{
-    float operand_A;
-    float operand_B;
-    char operator;
-    float ans;
-    int clientfd;
-    char recv_buffer[BUFFER_SIZE];
-};
 
 struct server_bound
 {
@@ -67,8 +60,8 @@ void init_socket(status_t *s)
     server->addrlen = sizeof(server->client_info);
 
     server->server_info.sin_family = PF_INET;
-    server->server_info.sin_addr.s_addr = INADDR_ANY;
-    server->server_info.sin_port = htons(4000);
+    server->server_info.sin_addr.s_addr = IP_ADDRESS;
+    server->server_info.sin_port = htons(PORT);
 
     (*s).now_status = listen_socket;
 }
@@ -174,6 +167,12 @@ void provide_server(status_t *s)
         if(levent & EPOLLIN)
         {
             int count = recv(lfd, input_buffer, sizeof(input_buffer)-1, MSG_DONTWAIT);
+            if(count == -1)
+            {
+                if(errno != )
+                n++
+                (*s).now_status = accept_client;
+            }
             if(count == 0)
             {
                 close(lfd);
@@ -194,6 +193,10 @@ void provide_server(status_t *s)
 #undef sock_fd
 #undef client_fd
 #undef epoll_fd
+#undef n_fds
+#undef n
+#undef ev
+#undef all_events
 
 int main(int argc, char *argv[])
 {
