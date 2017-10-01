@@ -118,10 +118,10 @@ int accept_client(struct server_bound *s)
 
 int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_size)
 {
-
     if(s->all_events[s->nfd].events & EPOLLIN)
     {
-        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size, MSG_DONTWAIT);
+        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size-1, MSG_DONTWAIT);
+
         if(count == -1)
         {
             if(errno != EAGAIN)
@@ -137,6 +137,7 @@ int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_s
             close(s->all_events[s->nfd].data.fd);
             epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
         }
+        input_buffer[count] = 0;
         printf("%s", input_buffer);
         fflush(stdout);
     }
