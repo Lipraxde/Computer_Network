@@ -105,7 +105,7 @@ int recv_data(struct client_bound *s, char *input_buffer, uint32_t buffer_size)
     *input_buffer = 0;
     if(s->all_events[s->nfd].events & EPOLLIN)
     {
-        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size, 0);
+        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size-1, MSG_DONTWAIT);
         if(count == -1)
         {
             if(errno != EAGAIN)
@@ -123,6 +123,7 @@ int recv_data(struct client_bound *s, char *input_buffer, uint32_t buffer_size)
             s->run = false;
             return 0;
         }
+        input_buffer[count] = 0;
         printf("%s", input_buffer);
         fflush(stdout);
     }
@@ -151,11 +152,10 @@ int socket_client(int ip, int port, int max_events)
             else if(client->all_events[client->nfd].data.fd == 0)
             {
                 while((fgets(send_buffer, sizeof(send_buffer), stdin)) != NULL)
-                    send(client->sock_fd, send_buffer, strlen(send_buffer)+1, 0);
+                    send(client->sock_fd, send_buffer, strlen(send_buffer), MSG_DONTWAIT);
             }
-            printf("fd: %d", client->all_events[client->nfd].data.fd);
         }
-        // sleep(10);
+        // sleep(0);
     }
 
     return 0;

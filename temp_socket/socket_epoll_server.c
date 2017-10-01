@@ -103,10 +103,7 @@ int accept_client(struct server_bound *s)
     }
     
     printf("Connection accepted.\n");
-    send(s->client_fd, connect_msg, strlen(connect_msg)+1, 0);
-    sleep(1000);
-    send(s->client_fd, connect_msg, strlen(connect_msg)+1, 0);
-    send(s->client_fd, connect_msg, strlen(connect_msg)+1, 0);
+    send(s->client_fd, connect_msg, strlen(connect_msg), MSG_DONTWAIT);
     
     s->ev.events = EPOLLIN; // | EPOLLET;
     s->ev.data.fd = s->client_fd;
@@ -122,10 +119,9 @@ int accept_client(struct server_bound *s)
 
 int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_size)
 {
-    *input_buffer = 0;
     if(s->all_events[s->nfd].events & EPOLLIN)
     {
-        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size, 0);
+        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size-1, MSG_DONTWAIT);
         if(count == -1)
         {
             if(errno != EAGAIN)
@@ -135,6 +131,7 @@ int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_s
                 // epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
                 return -1;
             }
+            return 0;
         }
         if(count == 0)
         {
@@ -142,11 +139,11 @@ int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_s
             // epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
             return 0;
         }
-
+        input_buffer[count] = 0;
         printf("%s", input_buffer);
         fflush(stdout);
     }
-    // send(all_events[n].data.fd, "ABC GOGO", strlen("ABC GOGO")+1, 0);
+    // send(all_events[n].data.fd, "ABC GOGO", strlen("ABC GOGO"), MSG_DONTWAIT);
     return 0;
 }
 
