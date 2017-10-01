@@ -8,14 +8,10 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include "status.h"
-
 #define IP_ADDRESS  INADDR_ANY
 #define PORT        4000
 #define BACKLOG     5
 #define MAX_EVENTS  10
-#define PACK_BEGIN  "_BEGIN"
-#define PACK_END    "_END"
 
 const char connect_msg[] = {"Connect to server.\n"};
 
@@ -125,12 +121,12 @@ int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_s
 
     if(s->all_events[s->nfd].events & EPOLLIN)
     {
-        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size-1, MSG_DONTWAIT);
+        int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size, MSG_DONTWAIT);
         if(count == -1)
         {
             if(errno != EAGAIN)
             {
-                perror ("read");
+                perror("recv");
                 close(s->all_events[s->nfd].data.fd);
                 epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
                 return -1;
@@ -141,7 +137,6 @@ int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_s
             close(s->all_events[s->nfd].data.fd);
             epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
         }
-        input_buffer[count] = '\0';
         printf("%s", input_buffer);
         fflush(stdout);
     }
@@ -170,9 +165,6 @@ int socket_epoll(int ip, int port, int backlog, int max_events)
                 provide_server(server, input_buffer, sizeof(input_buffer));
         }
     }
-
-
-
 }
 
 int main(int argc, char *argv[])
