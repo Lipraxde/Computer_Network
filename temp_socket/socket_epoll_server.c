@@ -7,6 +7,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #define IP_ADDRESS  INADDR_ANY
 #define PORT        4000
@@ -121,21 +122,22 @@ int provide_server(struct server_bound *s, char *input_buffer, uint32_t buffer_s
     if(s->all_events[s->nfd].events & EPOLLIN)
     {
         int count = recv(s->all_events[s->nfd].data.fd, input_buffer, buffer_size-1, MSG_DONTWAIT);
-
         if(count == -1)
         {
             if(errno != EAGAIN)
             {
                 perror("recv");
                 close(s->all_events[s->nfd].data.fd);
-                epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
+                // epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
                 return -1;
             }
+            return 0;
         }
         if(count == 0)
         {
             close(s->all_events[s->nfd].data.fd);
-            epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
+            // epoll_ctl(s->epoll_fd, EPOLL_CTL_DEL, s->all_events[s->nfd].data.fd, &s->ev);
+            return 0;
         }
         input_buffer[count] = 0;
         printf("%s", input_buffer);
@@ -153,17 +155,17 @@ int socket_epoll(int ip, int port, int backlog, int max_events)
 
     server = (struct server_bound *)calloc(1, sizeof(struct server_bound));
 
-    init_socket(server, ip, port);
-    listen_socket(server, backlog);
+    assert(init_socket(server, ip, port) == 0);
+    assert(listen_socket(server, backlog) == 0);
     while(true)
     {
-        wait_epoll(server, max_events);
+        assert(wait_epoll(server, max_events) == 0);
         for(server->nfd = 0; server->nfd < server->nfds; server->nfd++)
         {
             if(server->all_events[server->nfd].data.fd == server->sock_fd)
-                accept_client(server);
+                assert(accept_client(server) == 0);
             else
-                provide_server(server, input_buffer, sizeof(input_buffer));
+                assert(provide_server(server, input_buffer, sizeof(input_buffer)) == 0);
         }
     }
 }
