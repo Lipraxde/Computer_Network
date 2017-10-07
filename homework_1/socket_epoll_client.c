@@ -224,8 +224,13 @@ int socket_client(int ip, int port, int max_events)
 
 int main(int argc, char *argv[])
 {
-
-    socket_client(inet_addr(argv[1]), PORT, MAX_EVENTS);
+    if(argc != 2)
+    {
+        printf("Usage: client IP\n");
+        printf("Example: client 127.0.0.1\n");
+    }
+    else
+        socket_client(inet_addr(argv[1]), PORT, MAX_EVENTS);
 
     return 0;
 }
