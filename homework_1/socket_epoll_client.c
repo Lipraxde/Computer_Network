@@ -5,8 +5,8 @@
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <arpa/inet.h>
-#include <fcntl.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
 
@@ -26,6 +26,15 @@ struct client_bound
     struct sockaddr_in server_info;
     socklen_t addrlen;
     bool run;
+};
+
+
+struct calc_bound
+{
+    char _header;
+    float A;
+    float B;
+    char operator;
 };
 
 
@@ -131,6 +140,55 @@ int recv_data(struct client_bound *s, char *input_buffer, uint32_t buffer_size)
 }
 
 
+int calc(char *input_buffer, struct client_bound *client)
+{
+    static struct calc_bound data = {0};
+    static int status = 0;
+
+    switch(status)
+    {
+    case 0:
+        printf("init ...\n");
+        data.A = 0;
+        data.B = 0;
+        data.operator = 0;
+        printf("Input operand A: \n");
+        status = 1;
+        break;
+    case 1:
+        sscanf(input_buffer, "%f", &data.A);
+        printf("Input operator: \n");
+        status = 3;
+        break;
+    case 2:
+        sscanf(input_buffer, "%f", &data.B);
+        printf("Check data:\n");
+        printf("A = %f\n", data.A);
+        printf("B = %f\n", data.B);
+        printf("O = %c\n", data.operator);
+        printf("Press ENTER to continue.\n");
+        status = 4;
+        break;
+    case 3:
+        sscanf(input_buffer, "%c", &data.operator);
+        printf("Input operand B: \n");
+        status = 2;
+        break;
+    case 4:
+        printf("Send data to server ...\n");
+        send(client->sock_fd, &data, sizeof(struct calc_bound), MSG_DONTWAIT);
+        status = 0;
+        break;
+    default:
+        status = 0;
+        break;
+    }
+ 
+
+    return 0;
+}
+
+
 int socket_client(int ip, int port, int max_events)
 {
     char input_buffer[256];
@@ -138,7 +196,7 @@ int socket_client(int ip, int port, int max_events)
     struct client_bound *client;
 
     fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL, 0) | O_NONBLOCK);
-    
+
     client = (struct client_bound *)calloc(1, sizeof(struct client_bound));
     
     assert(init_socket(client, ip, port) == 0);
@@ -152,8 +210,10 @@ int socket_client(int ip, int port, int max_events)
                 assert(recv_data(client, input_buffer, sizeof(input_buffer)) == 0);
             else if(client->all_events[client->nfd].data.fd == 0)
             {
-                while((fgets(send_buffer, sizeof(send_buffer), stdin)) != NULL)
-                    send(client->sock_fd, send_buffer, strlen(send_buffer), MSG_DONTWAIT);
+                fgets(input_buffer, sizeof(input_buffer), stdin);
+                assert(calc(input_buffer, client) == 0);
+                // while((fgets(send_buffer, sizeof(send_buffer), stdin)) != NULL)
+                //    send(client->sock_fd, send_buffer, strlen(send_buffer), MSG_DONTWAIT);
             }
         }
         // sleep(0);
