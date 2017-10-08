@@ -152,12 +152,12 @@ int calc(char *input_buffer, struct client_bound *client)
         data.A = 0;
         data.B = 0;
         data.operator = 0;
-        printf("Input operand A: \n");
+        printf("Input operand A: ");
         status = 1;
         break;
     case 1:
         sscanf(input_buffer, "%f", &data.A);
-        printf("Input operator: \n");
+        printf("Input operator : ");
         status = 3;
         break;
     case 2:
@@ -166,12 +166,12 @@ int calc(char *input_buffer, struct client_bound *client)
         printf("A = %f\n", data.A);
         printf("B = %f\n", data.B);
         printf("O = %c\n", data.operator);
-        printf("Press ENTER to continue.\n");
+        printf("Press ENTER to continue.");
         status = 4;
         break;
     case 3:
         sscanf(input_buffer, "%c", &data.operator);
-        printf("Input operand B: \n");
+        printf("Input operand B: ");
         status = 2;
         break;
     case 4:
@@ -184,7 +184,7 @@ int calc(char *input_buffer, struct client_bound *client)
         break;
     }
  
-
+    fflush(stdout);
     return 0;
 }
 
@@ -207,7 +207,11 @@ int socket_client(int ip, int port, int max_events)
         for(client->nfd = 0; client->nfd < client->nfds; client->nfd++)
         {
             if(client->all_events[client->nfd].data.fd == client->sock_fd)
+            {
                 assert(recv_data(client, input_buffer, sizeof(input_buffer)) == 0);
+                input_buffer[0] = 0;
+                assert(calc(input_buffer, client) == 0);
+            }
             else if(client->all_events[client->nfd].data.fd == 0)
             {
                 fgets(input_buffer, sizeof(input_buffer), stdin);

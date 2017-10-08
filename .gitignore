@@ -1,5 +1,6 @@
 *.swp
 */_build/*
+.*/_build/*
 */.ycm_extra_conf.py
 *.out
 *.orig
