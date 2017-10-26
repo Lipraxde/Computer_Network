@@ -87,18 +87,45 @@ for {set i 0} {$i<5} {incr i} {
 }
 $ns at 15 "finish"
 
+set time_move 0.10
+set sliding_window 0.50
+set now_count 0
+set max_count [expr int($sliding_window/$time_move)]
+for {set i 0} {$i<$max_count} {incr i} {
+    set throughput_buffer(0,$i) 0
+    set throughput_buffer(1,$i) 0
+    set throughput_buffer(2,$i) 0
+    set throughput_buffer(3,$i) 0
+    set throughput_buffer(4,$i) 0
+}
+
+proc sum_throughput_buffer {n t} {
+    global throughput_buffer
+    set ans 0
+    for {set i 0} {$i<$t} {incr i} {
+        set ans [expr $ans+$throughput_buffer($n,$i)]
+    }
+    return $ans
+}
+
 proc record {} {
-    global sink rf0 rf1 rf2 rf3 rf4
+    global sink rf0 rf1 rf2 rf3 rf4 time_move sliding_window now_count max_count throughput_buffer
     #Get an instance of the simulator
     set ns [Simulator instance]
     #Set the time after which the procedure should be called again
-    set time 0.50
+    set time $time_move
     #How many bytes have been received by the traffic sinks?
-    set bw0 [$sink(0) set bytes_]
-    set bw1 [$sink(1) set bytes_]
-    set bw2 [$sink(2) set bytes_]
-    set bw3 [$sink(3) set bytes_]
-    set bw4 [$sink(4) set bytes_]
+    set throughput_buffer(0,$now_count) [$sink(0) set bytes_]
+    set throughput_buffer(1,$now_count) [$sink(1) set bytes_]
+    set throughput_buffer(2,$now_count) [$sink(2) set bytes_]
+    set throughput_buffer(3,$now_count) [$sink(3) set bytes_]
+    set throughput_buffer(4,$now_count) [$sink(4) set bytes_]
+    set bw0 [sum_throughput_buffer 0 $max_count]
+    set bw1 [sum_throughput_buffer 1 $max_count]
+    set bw2 [sum_throughput_buffer 2 $max_count]
+    set bw3 [sum_throughput_buffer 3 $max_count]
+    set bw4 [sum_throughput_buffer 4 $max_count]
+    set now_count [expr ($now_count+1)%$max_count]
     #Get the current time
     set now [$ns now]
     #Calculate the bandwidth (in MBit/s) and write it to the files
