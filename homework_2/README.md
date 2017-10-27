@@ -46,6 +46,7 @@ NS2模擬分析：
 ###### 檔案說明
 * hw2.tcl：模擬檔，輸出Y軸速率
 * sum\_hw2.tcl：Y軸輸出傳輸資料總和
+* window.png：模擬時的截圖
 * hw2.nam：送給nam的檔案
 * hw2\_0.tr, hw2\_1.tr, hw2\_2.tr, hw2\_3.tr, hw2\_4.tr：輸出的紀錄檔
 * plot.gp, sum\_plot.gp：gnuplot的繪圖檔
