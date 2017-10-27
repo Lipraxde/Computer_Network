@@ -23,6 +23,7 @@ NS2模擬分析：
 ![模擬時間從10秒拉長到50秒](https://github.com/Lipraxde/Computer_Network/blob/master/homework_2/transfer_time_1to50.png?raw=true)
 
 累計傳輸量
+
 ![模擬時間從10秒拉長到50秒](https://github.com/Lipraxde/Computer_Network/blob/master/homework_2/transfer_data.png?raw=true)
 
 可以看到長時間下來還是藍色佔了比較多的頻寬，不過另外四個就比較沒，看還傳輸速率和中間經過幾個節點有很大的關係（為什麼會成階梯形呢？因為對TCL不熟，用到整數運了）看到50秒的時候總傳輸速度約為(10+3+3+3+2)/50=0.42，沒超過0.5Mbit/s。
