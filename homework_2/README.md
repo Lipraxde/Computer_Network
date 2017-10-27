@@ -42,3 +42,14 @@ NS2模擬分析：
 藍(10.40-8.50)/9.9 = 0.192
 
 合起來大約0.499Mbit/s，大約0.5Mbit/s。
+
+###### 檔案說明
+* hw2.tcl：模擬檔，輸出Y軸速率
+* sum\_hw2.tcl：Y軸輸出傳輸資料總和
+* hw2.nam：送給nam的檔案
+* hw2\_0.tr, hw2\_1.tr, hw2\_2.tr, hw2\_3.tr, hw2\_4.tr：輸出的紀錄檔
+* plot.gp, sum\_plot.gp：gnuplot的繪圖檔
+* througput.png：預設圖片輸出
+* tm0.1\_sw0.5.png, tm0.01\_sw0.5.png：之前跑的結果(tm = time move, sw = sliding windows)
+* transfer\_data.png：傳輸時間延長到50s的累積傳輸量
+* transfer\_time\_1to50.png：傳輸時間延長到50s的Throughput
