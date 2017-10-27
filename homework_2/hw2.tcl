@@ -46,6 +46,13 @@ $ns duplex-link $routers(2) $routers(3) 0.5Mb 100ms DropTail
 $ns duplex-link $routers(3) $routers(4) 0.5Mb 100ms DropTail
 $ns duplex-link $routers(4) $reciver 0.5Mb 100ms DropTail
 
+#Set Queue limit
+#$ns queue-limit $routers(0) $routers(1) 10
+#$ns queue-limit $routers(1) $routers(2) 10
+#$ns queue-limit $routers(2) $routers(3) 10
+#$ns queue-limit $routers(3) $routers(4) 10
+#$ns queue-limit $routers(4) $reciver 10
+
 #Give node position (for NAM)
 $ns duplex-link-op $routers(0) $routers(1) orient right
 $ns duplex-link-op $routers(1) $routers(2) orient right
