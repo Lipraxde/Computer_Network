@@ -15,18 +15,18 @@ DEBUG_FLAG += -g
 
 .PHONY : all server client clean
 
-all: server client
+all: $(OUT_DIR) $(S_OUT) $(C_OUT)
 
-server: $(S_OBJS)
+$(S_OUT): $(S_OBJS)
 	$(CC) $(CFLAGS) $(S_OBJS) -o $(S_OUT)
 
-client: $(C_OBJS)
+$(C_OUT): $(C_OBJS)
 	$(CC) $(CFLAGS) $(C_OBJS) -o $(C_OUT)
 
-$(S_OBJS): $(OUT_DIR)%.o : $(SRC_DIR)%.c $(OUT_DIR)
+$(S_OBJS): $(OUT_DIR)%.o : $(SRC_DIR)%.c
 	$(CC) $(CFLAGS) $(DEBUG_FLAG) -c $< -o $@
 
-$(C_OBJS): $(OUT_DIR)%.o : $(SRC_DIR)%.c $(OUT_DIR)
+$(C_OBJS): $(OUT_DIR)%.o : $(SRC_DIR)%.c
 	$(CC) $(CFLAGS) $(DEBUG_FLAG) -c $< -o $@
 
 $(OUT_DIR):
