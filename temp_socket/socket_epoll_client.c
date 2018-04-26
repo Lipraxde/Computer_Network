@@ -75,8 +75,8 @@ int connect_socket(struct client_bound *s)
     }
 
     s->ev.events = EPOLLIN; // | EPOLLET;
-    s->ev.data.fd = 0;
-    if(epoll_ctl(s->epoll_fd, EPOLL_CTL_ADD, 0, &s->ev) == -1)
+    s->ev.data.fd = STDIN_FILENO;
+    if(epoll_ctl(s->epoll_fd, EPOLL_CTL_ADD, STDIN_FILENO, &s->ev) == -1)
     {
         perror("epoll_ctl: stdin");
         return -1;
@@ -150,13 +150,15 @@ int socket_client(int ip, int port, int max_events)
         {
             if(client->all_events[client->nfd].data.fd == client->sock_fd)
                 assert(recv_data(client, input_buffer, sizeof(input_buffer)) == 0);
-            else if(client->all_events[client->nfd].data.fd == 0)
+            else if(client->all_events[client->nfd].data.fd == STDIN_FILENO)
             {
                 while((fgets(send_buffer, sizeof(send_buffer), stdin)) != NULL)
                     send(client->sock_fd, send_buffer, strlen(send_buffer), MSG_DONTWAIT);
             }
         }
         // sleep(0);
+        if(feof(stdin))
+            client->run = false;
     }
 
     return 0;
