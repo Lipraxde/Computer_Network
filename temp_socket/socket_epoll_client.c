@@ -59,6 +59,7 @@ int connect_socket(struct client_bound *s)
         return -1;
     }
 
+    // FIXME should not create epoll fd here, if we won't use mutiple server
     s->epoll_fd = epoll_create1(0);
     if(s->epoll_fd == -1)
     {
